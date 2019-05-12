@@ -25,6 +25,7 @@ namespace DiscIO
 {
 const IOS::ES::TicketReader Volume::INVALID_TICKET{};
 const IOS::ES::TMDReader Volume::INVALID_TMD{};
+const std::vector<u8> Volume::INVALID_CERT_CHAIN{};
 
 std::map<Language, std::string> Volume::ReadWiiNames(const std::vector<char16_t>& data)
 {
@@ -68,4 +69,4 @@ std::unique_ptr<Volume> CreateVolumeFromFilename(const std::string& filename)
   return nullptr;
 }
 
-}  // namespace
+}  // namespace DiscIO

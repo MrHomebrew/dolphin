@@ -19,6 +19,7 @@
 #include "VideoCommon/DataReader.h"
 #include "VideoCommon/IndexGenerator.h"
 #include "VideoCommon/NativeVertexFormat.h"
+#include "VideoCommon/RenderBase.h"
 #include "VideoCommon/Statistics.h"
 #include "VideoCommon/VertexLoaderBase.h"
 #include "VideoCommon/VertexLoaderManager.h"
@@ -90,7 +91,7 @@ struct entry
   u64 num_verts;
   bool operator<(const entry& other) const { return num_verts > other.num_verts; }
 };
-}
+}  // namespace
 
 std::string VertexLoadersToString()
 {
@@ -131,7 +132,7 @@ NativeVertexFormat* GetOrCreateMatchingFormat(const PortableVertexDeclaration& d
   auto iter = s_native_vertex_map.find(decl);
   if (iter == s_native_vertex_map.end())
   {
-    std::unique_ptr<NativeVertexFormat> fmt = g_vertex_manager->CreateNativeVertexFormat(decl);
+    std::unique_ptr<NativeVertexFormat> fmt = g_renderer->CreateNativeVertexFormat(decl);
     auto ipair = s_native_vertex_map.emplace(decl, std::move(fmt));
     iter = ipair.first;
   }
@@ -228,9 +229,7 @@ static VertexLoaderBase* RefreshLoader(int vtx_attr_group, bool preprocess = fal
       const PortableVertexDeclaration& format = loader->m_native_vtx_decl;
       std::unique_ptr<NativeVertexFormat>& native = s_native_vertex_map[format];
       if (!native)
-      {
-        native = g_vertex_manager->CreateNativeVertexFormat(format);
-      }
+        native = g_renderer->CreateNativeVertexFormat(format);
       loader->m_native_vertex_format = native.get();
     }
     state->vertex_loaders[vtx_attr_group] = loader;
@@ -296,7 +295,7 @@ NativeVertexFormat* GetCurrentVertexFormat()
   return s_current_vtx_fmt;
 }
 
-}  // namespace
+}  // namespace VertexLoaderManager
 
 void LoadCPReg(u32 sub_cmd, u32 value, bool is_preprocess)
 {

@@ -21,6 +21,7 @@
 // TODO: ugly
 #ifdef _WIN32
 #include "VideoBackends/D3D/VideoBackend.h"
+#include "VideoBackends/D3D12/VideoBackend.h"
 #endif
 #include "VideoBackends/Null/VideoBackend.h"
 #include "VideoBackends/OGL/VideoBackend.h"
@@ -185,6 +186,7 @@ void VideoBackendBase::PopulateList()
   g_available_video_backends.push_back(std::make_unique<OGL::VideoBackend>());
 #ifdef _WIN32
   g_available_video_backends.push_back(std::make_unique<DX11::VideoBackend>());
+  g_available_video_backends.push_back(std::make_unique<DX12::VideoBackend>());
 #endif
   g_available_video_backends.push_back(std::make_unique<Vulkan::VideoBackend>());
   g_available_video_backends.push_back(std::make_unique<SW::VideoSoftware>());
@@ -285,14 +287,10 @@ void VideoBackendBase::InitializeShared()
   memset(&g_preprocess_cp_state, 0, sizeof(g_preprocess_cp_state));
   memset(texMem, 0, TMEM_SIZE);
 
-  // Do our OSD callbacks
-  OSD::DoCallbacks(OSD::CallbackType::Initialization);
-
   // do not initialize again for the config window
   m_initialized = true;
 
   m_invalid = false;
-  frameCount = 0;
 
   CommandProcessor::Init();
   Fifo::Init();
@@ -305,11 +303,13 @@ void VideoBackendBase::InitializeShared()
   GeometryShaderManager::Init();
   PixelShaderManager::Init();
 
+  g_Config.VerifyValidity();
   UpdateActiveConfig();
 }
 
 void VideoBackendBase::ShutdownShared()
 {
+<<<<<<< HEAD
   if(Core::IsRunning())
   {
     VertexLoaderManager::Clear();
@@ -320,6 +320,8 @@ void VideoBackendBase::ShutdownShared()
   // Do our OSD callbacks
   OSD::DoCallbacks(OSD::CallbackType::Shutdown);
 
+=======
+>>>>>>> 1d5dd5db914d94f3f612c13c6c5e1d5e711b49b5
   m_initialized = false;
 
   VertexLoaderManager::Clear();

@@ -42,6 +42,7 @@
 #include <CoreFoundation/CFBundle.h>
 #include <CoreFoundation/CFString.h>
 #include <CoreFoundation/CFURL.h>
+#include <mach-o/dyld.h>
 #include <sys/param.h>
 #endif
 
@@ -681,6 +682,10 @@ std::string GetExePath()
       dolphin_path = TStrToUTF8(dolphin_exe_expanded_path);
     else
       dolphin_path = TStrToUTF8(dolphin_exe_path);
+#elif defined(__APPLE__)
+    dolphin_path = GetBundleDirectory();
+    dolphin_path =
+        dolphin_path.substr(0, dolphin_path.find_last_of("Dolphin.app/Contents/MacOS") + 1);
 #else
     char dolphin_exe_path[PATH_MAX];
     ssize_t len = ::readlink("/proc/self/exe", dolphin_exe_path, sizeof(dolphin_exe_path));
@@ -766,6 +771,7 @@ static void RebuildUserDirectories(unsigned int dir_index)
     s_user_paths[D_PIPES_IDX] = s_user_paths[D_USER_IDX] + PIPES_DIR DIR_SEP;
     s_user_paths[D_WFSROOT_IDX] = s_user_paths[D_USER_IDX] + WFSROOT_DIR DIR_SEP;
     s_user_paths[D_BACKUP_IDX] = s_user_paths[D_USER_IDX] + BACKUP_DIR DIR_SEP;
+    s_user_paths[D_RESOURCEPACK_IDX] = s_user_paths[D_USER_IDX] + RESOURCEPACK_DIR DIR_SEP;
     s_user_paths[F_DOLPHINCONFIG_IDX] = s_user_paths[D_CONFIG_IDX] + DOLPHIN_CONFIG;
     s_user_paths[F_GCPADCONFIG_IDX] = s_user_paths[D_CONFIG_IDX] + GCPAD_CONFIG;
     s_user_paths[F_WIIPADCONFIG_IDX] = s_user_paths[D_CONFIG_IDX] + WIIPAD_CONFIG;
@@ -774,7 +780,8 @@ static void RebuildUserDirectories(unsigned int dir_index)
     s_user_paths[F_DEBUGGERCONFIG_IDX] = s_user_paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
     s_user_paths[F_LOGGERCONFIG_IDX] = s_user_paths[D_CONFIG_IDX] + LOGGER_CONFIG;
     s_user_paths[F_MAINLOG_IDX] = s_user_paths[D_LOGS_IDX] + MAIN_LOG;
-    s_user_paths[F_RAMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + RAM_DUMP;
+    s_user_paths[F_MEM1DUMP_IDX] = s_user_paths[D_DUMP_IDX] + MEM1_DUMP;
+    s_user_paths[F_MEM2DUMP_IDX] = s_user_paths[D_DUMP_IDX] + MEM2_DUMP;
     s_user_paths[F_ARAMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + ARAM_DUMP;
     s_user_paths[F_FAKEVMEMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + FAKEVMEM_DUMP;
     s_user_paths[F_GCSRAM_IDX] = s_user_paths[D_GCUSER_IDX] + GC_SRAM;
@@ -816,7 +823,8 @@ static void RebuildUserDirectories(unsigned int dir_index)
     s_user_paths[D_DUMPTEXTURES_IDX] = s_user_paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
     s_user_paths[D_DUMPDSP_IDX] = s_user_paths[D_DUMP_IDX] + DUMP_DSP_DIR DIR_SEP;
     s_user_paths[D_DUMPSSL_IDX] = s_user_paths[D_DUMP_IDX] + DUMP_SSL_DIR DIR_SEP;
-    s_user_paths[F_RAMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + RAM_DUMP;
+    s_user_paths[F_MEM1DUMP_IDX] = s_user_paths[D_DUMP_IDX] + MEM1_DUMP;
+    s_user_paths[F_MEM2DUMP_IDX] = s_user_paths[D_DUMP_IDX] + MEM2_DUMP;
     s_user_paths[F_ARAMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + ARAM_DUMP;
     s_user_paths[F_FAKEVMEMDUMP_IDX] = s_user_paths[D_DUMP_IDX] + FAKEVMEM_DUMP;
     break;

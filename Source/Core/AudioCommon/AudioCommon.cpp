@@ -89,10 +89,8 @@ std::string GetDefaultSoundBackend()
 #elif defined __linux__
   if (AlsaSound::isValid())
     backend = BACKEND_ALSA;
-#elif defined __APPLE__
+#elif defined(__APPLE__) || defined(_WIN32)
   backend = BACKEND_CUBEB;
-#elif defined _WIN32
-  backend = BACKEND_XAUDIO2;
 #endif
   return backend;
 }
@@ -128,6 +126,8 @@ bool SupportsDPL2Decoder(const std::string& backend)
   if (backend == BACKEND_CUBEB)
     return true;
   if (backend == BACKEND_PULSEAUDIO)
+    return true;
+  if (backend == BACKEND_XAUDIO2)
     return true;
   return false;
 }

@@ -3,8 +3,8 @@ add_library(audiocommon
   AudioStretcher.cpp
   CubebStream.cpp
   CubebUtils.cpp
-  DPL2Decoder.cpp
   Mixer.cpp
+  SurroundDecoder.cpp
   NullSoundStream.cpp
   WaveFile.cpp
 )
@@ -65,4 +65,4 @@ if(WIN32)
   )
 endif()
 
-target_link_libraries(audiocommon PRIVATE cubeb SoundTouch)
+target_link_libraries(audiocommon PRIVATE cubeb SoundTouch FreeSurround)

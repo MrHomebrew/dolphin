@@ -58,8 +58,6 @@ static unsigned char __LZO_MMODEL out[OUT_LEN];
 
 static HEAP_ALLOC(wrkmem, LZO1X_1_MEM_COMPRESS);
 
-static std::string g_last_filename;
-
 static AfterLoadCallbackFunc s_on_after_load_callback;
 
 // Temporary undo state buffer
@@ -74,7 +72,7 @@ static Common::Event g_compressAndDumpStateSyncEvent;
 static std::thread g_save_thread;
 
 // Don't forget to increase this after doing changes on the savestate system
-static const u32 STATE_VERSION = 99;  // Last changed in PR 6020
+static const u32 STATE_VERSION = 110;  // Last changed in PR 8036
 
 // Maps savestate versions to Dolphin versions.
 // Versions after 42 don't need to be added to this list,
@@ -177,10 +175,6 @@ void DoState(PointerWrap& p)
   g_video_backend->DoState(p);
   p.DoMarker("video_backend");
 
-  if (SConfig::GetInstance().bWii)
-    Wiimote::DoState(p);
-  p.DoMarker("Wiimote");
-
   PowerPC::DoState(p);
   p.DoMarker("PowerPC");
   // CoreTiming needs to be restored before restoring Hardware because
@@ -189,6 +183,9 @@ void DoState(PointerWrap& p)
   p.DoMarker("CoreTiming");
   HW::DoState(p);
   p.DoMarker("HW");
+  if (SConfig::GetInstance().bWii)
+    Wiimote::DoState(p);
+  p.DoMarker("Wiimote");
   Movie::DoState(p);
   p.DoMarker("Movie");
   Gecko::DoState(p);
@@ -413,8 +410,6 @@ void SaveAs(const std::string& filename, bool wait)
       Flush();
       g_save_thread = std::thread(CompressAndDumpState, save_args);
       g_compressAndDumpStateSyncEvent.Wait();
-
-      g_last_filename = filename;
     }
     else
     {

@@ -23,6 +23,7 @@
 #include "Common/StringUtil.h"
 #include "Common/Timer.h"
 #include "Common/Version.h"
+#include "Core/Config/MainSettings.h"
 #include "Core/ConfigManager.h"
 #include "Core/HW/GCPad.h"
 #include "Core/Movie.h"
@@ -137,8 +138,9 @@ void DolphinAnalytics::ReportGameStart()
 }
 
 // Keep in sync with enum class GameQuirk definition.
-const char* GAME_QUIRKS_NAMES[] = {
-    "icache-matters",  // ICACHE_MATTERS
+static const char* GAME_QUIRKS_NAMES[] = {
+    "icache-matters",
+    "directly-reads-wiimote-input",
 };
 static_assert(sizeof(GAME_QUIRKS_NAMES) / sizeof(GAME_QUIRKS_NAMES[0]) ==
                   static_cast<u32>(GameQuirk::COUNT),
@@ -329,7 +331,7 @@ void DolphinAnalytics::MakePerGameBuilder()
   builder.AddData("cfg-audio-backend", SConfig::GetInstance().sBackend);
   builder.AddData("cfg-oc-enable", SConfig::GetInstance().m_OCEnable);
   builder.AddData("cfg-oc-factor", SConfig::GetInstance().m_OCFactor);
-  builder.AddData("cfg-render-to-main", SConfig::GetInstance().bRenderToMain);
+  builder.AddData("cfg-render-to-main", Config::Get(Config::MAIN_RENDER_TO_MAIN));
   if (g_video_backend)
   {
     builder.AddData("cfg-video-backend", g_video_backend->GetName());

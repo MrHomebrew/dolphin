@@ -34,6 +34,7 @@ CMakeLists.txt.user
 *.kdev4
 # Ignore IDEA/Clion files/dirs
 /.idea/
+<<<<<<< HEAD
 **/*.cmake
 **/CMakeFiles
 **/*.a
@@ -46,3 +47,7 @@ CMakeCache.txt
 exports/
 dolphin_libretro.so
 
+=======
+# Ignore Visual Studio Code's working dir
+/.vscode/
+>>>>>>> 1d5dd5db914d94f3f612c13c6c5e1d5e711b49b5

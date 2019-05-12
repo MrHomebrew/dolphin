@@ -156,6 +156,7 @@ void SetLocale(std::string locale_name)
 
 void CreateDirectories()
 {
+  File::CreateFullPath(File::GetUserPath(D_RESOURCEPACK_IDX));
   File::CreateFullPath(File::GetUserPath(D_USER_IDX));
   File::CreateFullPath(File::GetUserPath(D_CACHE_IDX));
   File::CreateFullPath(File::GetUserPath(D_COVERCACHE_IDX));
@@ -193,7 +194,7 @@ void SetUserDirectory(const std::string& custom_path)
     return;
   }
 
-  std::string user_path = "";
+  std::string user_path;
 #ifdef _WIN32
   // Detect where the User directory is. There are five different cases
   // (on top of the command line flag, which overrides all this):
@@ -252,7 +253,7 @@ void SetUserDirectory(const std::string& custom_path)
     user_path += DIR_SEP;
 
 #else
-  if (File::Exists(ROOT_DIR DIR_SEP USERDATA_DIR))
+  if (File::IsDirectory(ROOT_DIR DIR_SEP USERDATA_DIR))
   {
     user_path = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
   }
@@ -371,11 +372,11 @@ void EnableScreenSaver(Window win, bool enable)
 void EnableScreenSaver(bool enable)
 #endif
 {
-// Inhibit the screensaver. Depending on the operating system this may also
-// disable low-power states and/or screen dimming.
+  // Inhibit the screensaver. Depending on the operating system this may also
+  // disable low-power states and/or screen dimming.
 
 #if defined(HAVE_X11) && HAVE_X11
-  if (SConfig::GetInstance().bDisableScreenSaver)
+  if (Config::Get(Config::MAIN_DISABLE_SCREENSAVER))
   {
     X11Utils::InhibitScreensaver(win, !enable);
   }
@@ -390,7 +391,7 @@ void EnableScreenSaver(bool enable)
   else
   {
     EXECUTION_STATE should_screen_save =
-        SConfig::GetInstance().bDisableScreenSaver ? ES_DISPLAY_REQUIRED : 0;
+        Config::Get(Config::MAIN_DISABLE_SCREENSAVER) ? ES_DISPLAY_REQUIRED : 0;
     SetThreadExecutionState(ES_CONTINUOUS | should_screen_save | ES_SYSTEM_REQUIRED);
   }
 #endif
@@ -398,7 +399,7 @@ void EnableScreenSaver(bool enable)
 #ifdef __APPLE__
   static IOPMAssertionID s_power_assertion = kIOPMNullAssertionID;
 
-  if (SConfig::GetInstance().bDisableScreenSaver)
+  if (Config::Get(Config::MAIN_DISABLE_SCREENSAVER))
   {
     if (enable)
     {

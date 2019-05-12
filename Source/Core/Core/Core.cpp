@@ -33,17 +33,15 @@
 
 #ifdef USE_ANALYTICS
 #include "Core/Analytics.h"
+<<<<<<< HEAD
 #endif
+=======
+#include "Core/Boot/Boot.h"
+>>>>>>> 1d5dd5db914d94f3f612c13c6c5e1d5e711b49b5
 #include "Core/BootManager.h"
 #include "Core/ConfigManager.h"
 #include "Core/CoreTiming.h"
 #include "Core/DSPEmulator.h"
-#include "Core/Host.h"
-#include "Core/MemTools.h"
-#ifdef USE_MEMORYWATCHER
-#include "Core/MemoryWatcher.h"
-#endif
-#include "Core/Boot/Boot.h"
 #include "Core/FifoPlayer/FifoPlayer.h"
 #include "Core/HLE/HLE.h"
 #include "Core/HW/CPU.h"
@@ -55,7 +53,9 @@
 #include "Core/HW/SystemTimers.h"
 #include "Core/HW/VideoInterface.h"
 #include "Core/HW/Wiimote.h"
+#include "Core/Host.h"
 #include "Core/IOS/IOS.h"
+#include "Core/MemTools.h"
 #include "Core/Movie.h"
 #include "Core/NetPlayClient.h"
 #include "Core/NetPlayProto.h"
@@ -67,6 +67,10 @@
 
 #ifdef USE_GDBSTUB
 #include "Core/PowerPC/GDBStub.h"
+#endif
+
+#ifdef USE_MEMORYWATCHER
+#include "Core/MemoryWatcher.h"
 #endif
 
 #include "InputCommon/ControllerInterface/ControllerInterface.h"
@@ -103,6 +107,10 @@ static bool s_request_refresh_info = false;
 static bool s_is_throttler_temp_disabled = false;
 static bool s_frame_step = false;
 
+#ifdef USE_MEMORYWATCHER
+static std::unique_ptr<MemoryWatcher> s_memory_watcher;
+#endif
+
 struct HostJob
 {
   std::function<void()> job;
@@ -127,6 +135,13 @@ void FrameUpdateOnCPUThread()
 {
   if (NetPlay::IsNetPlayRunning())
     NetPlay::NetPlayClient::SendTimeBase();
+}
+
+void OnFrameEnd()
+{
+#ifdef USE_MEMORYWATCHER
+  s_memory_watcher->Step();
+#endif
 }
 
 // Display messages and return values
@@ -242,12 +257,10 @@ static void ResetRumble()
 #if defined(__LIBUSB__)
   GCAdapter::ResetRumble();
 #endif
-#if defined(CIFACE_USE_XINPUT) || defined(CIFACE_USE_DINPUT)
   if (!Pad::IsInitialized())
     return;
   for (int i = 0; i < 4; ++i)
     Pad::ResetRumble(i);
-#endif
 }
 
 // Called from GUI thread
@@ -288,7 +301,7 @@ void Stop()  // - Hammertime!
   ResetRumble();
 
 #ifdef USE_MEMORYWATCHER
-  MemoryWatcher::Shutdown();
+  s_memory_watcher.reset();
 #endif
 }
 
@@ -334,7 +347,7 @@ static void CpuThread(const std::optional<std::string>& savestate_path, bool del
     EMM::InstallExceptionHandler();  // Let's run under memory watch
 
 #ifdef USE_MEMORYWATCHER
-  MemoryWatcher::Init();
+  s_memory_watcher = std::make_unique<MemoryWatcher>();
 #endif
 
   if (savestate_path)
@@ -499,7 +512,6 @@ void EmuThread(WindowSystemInfo wsi)
   }
   else
   {
-    // Update references in case controllers were refreshed
     g_controller_interface.ChangeWindow(wsi.render_surface);
     Pad::LoadConfig();
     Keyboard::LoadConfig();
@@ -509,24 +521,31 @@ void EmuThread(WindowSystemInfo wsi)
   const bool delete_savestate = boot_params->delete_savestate;
 
   // Load and Init Wiimotes - only if we are booting in Wii mode
+  bool init_wiimotes = false;
   if (core_parameter.bWii && !SConfig::GetInstance().m_bt_passthrough_enabled)
   {
     if (init_controllers)
     {
       Wiimote::Initialize(savestate_path ? Wiimote::InitializeMode::DO_WAIT_FOR_WIIMOTES :
                                            Wiimote::InitializeMode::DO_NOT_WAIT_FOR_WIIMOTES);
+      init_wiimotes = true;
     }
     else
     {
       Wiimote::LoadConfig();
     }
+
+    if (NetPlay::IsNetPlayRunning())
+      NetPlay::SetupWiimotes();
   }
 
-  Common::ScopeGuard controller_guard{[init_controllers] {
+  Common::ScopeGuard controller_guard{[init_controllers, init_wiimotes] {
     if (!init_controllers)
       return;
 
-    Wiimote::Shutdown();
+    if (init_wiimotes)
+      Wiimote::Shutdown();
+
     Keyboard::Shutdown();
     Pad::Shutdown();
     g_controller_interface.Shutdown();

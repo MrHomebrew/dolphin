@@ -30,7 +30,6 @@ add_library(core
   Config/NetplaySettings.cpp
   Config/SYSCONFSettings.cpp
   Config/UISettings.cpp
-  Config/WiimoteInputSettings.cpp
   ConfigLoaders/BaseConfigLoader.cpp
   ConfigLoaders/GameConfigLoader.cpp
   ConfigLoaders/IsSettingSaveable.cpp
@@ -72,6 +71,7 @@ add_library(core
   HLE/HLE_Misc.cpp
   HLE/HLE_OS.cpp
   HLE/HLE_VarArgs.cpp
+  HW/AddressSpace.cpp
   HW/AudioInterface.cpp
   HW/CPU.cpp
   HW/DSP.cpp
@@ -133,16 +133,25 @@ add_library(core
   HW/VideoInterface.cpp
   HW/WII_IPC.cpp
   HW/Wiimote.cpp
+  HW/WiimoteCommon/DataReport.cpp
   HW/WiimoteEmu/WiimoteEmu.cpp
-  HW/WiimoteEmu/Attachment/Classic.cpp
-  HW/WiimoteEmu/Attachment/Attachment.cpp
-  HW/WiimoteEmu/Attachment/Nunchuk.cpp
-  HW/WiimoteEmu/Attachment/Drums.cpp
-  HW/WiimoteEmu/Attachment/Guitar.cpp
-  HW/WiimoteEmu/Attachment/Turntable.cpp
+  HW/WiimoteEmu/Camera.cpp
+  HW/WiimoteEmu/Dynamics.cpp
   HW/WiimoteEmu/EmuSubroutines.cpp
   HW/WiimoteEmu/Encryption.cpp
+  HW/WiimoteEmu/ExtensionPort.cpp
+  HW/WiimoteEmu/I2CBus.cpp
+  HW/WiimoteEmu/MotionPlus.cpp
   HW/WiimoteEmu/Speaker.cpp
+  HW/WiimoteEmu/Extension/Classic.cpp
+  HW/WiimoteEmu/Extension/DrawsomeTablet.cpp
+  HW/WiimoteEmu/Extension/Extension.cpp
+  HW/WiimoteEmu/Extension/Nunchuk.cpp
+  HW/WiimoteEmu/Extension/Drums.cpp
+  HW/WiimoteEmu/Extension/Guitar.cpp
+  HW/WiimoteEmu/Extension/TaTaCon.cpp
+  HW/WiimoteEmu/Extension/Turntable.cpp
+  HW/WiimoteEmu/Extension/UDrawTablet.cpp
   HW/WiimoteReal/WiimoteReal.cpp
   HW/WiiSave.cpp
   IOS/Device.cpp
@@ -209,6 +218,7 @@ add_library(core
   PowerPC/JitInterface.cpp
   PowerPC/CachedInterpreter/CachedInterpreter.cpp
   PowerPC/CachedInterpreter/InterpreterBlockCache.cpp
+  PowerPC/ConditionRegister.cpp
   PowerPC/Interpreter/Interpreter_Branch.cpp
   PowerPC/Interpreter/Interpreter.cpp
   PowerPC/Interpreter/Interpreter_FloatingPoint.cpp
@@ -255,7 +265,6 @@ if(_M_X86)
     PowerPC/Jit64Common/EmuCodeBlock.cpp
     PowerPC/Jit64Common/FarCodeCache.cpp
     PowerPC/Jit64Common/Jit64AsmCommon.cpp
-    PowerPC/Jit64Common/Jit64Base.cpp
     PowerPC/Jit64Common/TrampolineCache.cpp
   )
 elseif(_M_ARM_64)
@@ -334,6 +343,7 @@ if(WIN32)
   endif()
   target_link_libraries(core PUBLIC
     videod3d
+    videod3d12
     setupapi.lib
     iphlpapi.lib
   )

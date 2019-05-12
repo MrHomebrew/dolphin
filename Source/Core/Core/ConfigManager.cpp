@@ -35,6 +35,7 @@
 #include "Core/HLE/HLE.h"
 #include "Core/HW/DVD/DVDInterface.h"
 #include "Core/HW/SI/SI.h"
+#include "Core/Host.h"
 #include "Core/IOS/ES/ES.h"
 #include "Core/IOS/ES/Formats.h"
 #include "Core/PatchEngine.h"
@@ -80,7 +81,6 @@ void SConfig::SaveSettings()
 
   SaveGeneralSettings(ini);
   SaveInterfaceSettings(ini);
-  SaveDisplaySettings(ini);
   SaveGameListSettings(ini);
   SaveCoreSettings(ini);
   SaveMovieSettings(ini);
@@ -92,6 +92,7 @@ void SConfig::SaveSettings()
   SaveBluetoothPassthroughSettings(ini);
   SaveUSBPassthroughSettings(ini);
   SaveAutoUpdateSettings(ini);
+  SaveJitDebugSettings(ini);
 
   ini.Save(File::GetUserPath(F_DOLPHINCONFIG_IDX));
 
@@ -148,22 +149,6 @@ void SConfig::SaveInterfaceSettings(IniFile& ini)
   interface->Set("ThemeName", theme_name);
   interface->Set("PauseOnFocusLost", m_PauseOnFocusLost);
   interface->Set("DebugModeEnabled", bEnableDebugging);
-}
-
-void SConfig::SaveDisplaySettings(IniFile& ini)
-{
-  IniFile::Section* display = ini.GetOrCreateSection("Display");
-
-  display->Set("FullscreenDisplayRes", strFullscreenResolution);
-  display->Set("Fullscreen", bFullscreen);
-  display->Set("RenderToMain", bRenderToMain);
-  display->Set("RenderWindowXPos", iRenderWindowXPos);
-  display->Set("RenderWindowYPos", iRenderWindowYPos);
-  display->Set("RenderWindowWidth", iRenderWindowWidth);
-  display->Set("RenderWindowHeight", iRenderWindowHeight);
-  display->Set("RenderWindowAutoSize", bRenderWindowAutoSize);
-  display->Set("KeepWindowOnTop", bKeepWindowOnTop);
-  display->Set("DisableScreenSaver", bDisableScreenSaver);
 }
 
 void SConfig::SaveGameListSettings(IniFile& ini)
@@ -352,6 +337,21 @@ void SConfig::SaveAutoUpdateSettings(IniFile& ini)
   section->Set("HashOverride", m_auto_update_hash_override);
 }
 
+void SConfig::SaveJitDebugSettings(IniFile& ini)
+{
+  IniFile::Section* section = ini.GetOrCreateSection("Debug");
+
+  section->Set("JitOff", bJITOff);
+  section->Set("JitLoadStoreOff", bJITLoadStoreOff);
+  section->Set("JitLoadStoreFloatingOff", bJITLoadStoreFloatingOff);
+  section->Set("JitLoadStorePairedOff", bJITLoadStorePairedOff);
+  section->Set("JitFloatingPointOff", bJITFloatingPointOff);
+  section->Set("JitIntegerOff", bJITIntegerOff);
+  section->Set("JitPairedOff", bJITPairedOff);
+  section->Set("JitSystemRegistersOff", bJITSystemRegistersOff);
+  section->Set("JitBranchOff", bJITBranchOff);
+}
+
 void SConfig::LoadSettings()
 {
   Config::Load();
@@ -362,7 +362,6 @@ void SConfig::LoadSettings()
 
   LoadGeneralSettings(ini);
   LoadInterfaceSettings(ini);
-  LoadDisplaySettings(ini);
   LoadGameListSettings(ini);
   LoadCoreSettings(ini);
   LoadMovieSettings(ini);
@@ -374,6 +373,7 @@ void SConfig::LoadSettings()
   LoadBluetoothPassthroughSettings(ini);
   LoadUSBPassthroughSettings(ini);
   LoadAutoUpdateSettings(ini);
+  LoadJitDebugSettings(ini);
 }
 
 void SConfig::LoadGeneralSettings(IniFile& ini)
@@ -421,22 +421,6 @@ void SConfig::LoadInterfaceSettings(IniFile& ini)
   interface->Get("ThemeName", &theme_name, DEFAULT_THEME_DIR);
   interface->Get("PauseOnFocusLost", &m_PauseOnFocusLost, false);
   interface->Get("DebugModeEnabled", &bEnableDebugging, false);
-}
-
-void SConfig::LoadDisplaySettings(IniFile& ini)
-{
-  IniFile::Section* display = ini.GetOrCreateSection("Display");
-
-  display->Get("Fullscreen", &bFullscreen, false);
-  display->Get("FullscreenDisplayRes", &strFullscreenResolution, "Auto");
-  display->Get("RenderToMain", &bRenderToMain, false);
-  display->Get("RenderWindowXPos", &iRenderWindowXPos, -1);
-  display->Get("RenderWindowYPos", &iRenderWindowYPos, -1);
-  display->Get("RenderWindowWidth", &iRenderWindowWidth, 640);
-  display->Get("RenderWindowHeight", &iRenderWindowHeight, 480);
-  display->Get("RenderWindowAutoSize", &bRenderWindowAutoSize, false);
-  display->Get("KeepWindowOnTop", &bKeepWindowOnTop, false);
-  display->Get("DisableScreenSaver", &bDisableScreenSaver, true);
 }
 
 void SConfig::LoadGameListSettings(IniFile& ini)
@@ -651,9 +635,23 @@ void SConfig::LoadAutoUpdateSettings(IniFile& ini)
   section->Get("HashOverride", &m_auto_update_hash_override, "");
 }
 
+void SConfig::LoadJitDebugSettings(IniFile& ini)
+{
+  IniFile::Section* section = ini.GetOrCreateSection("Debug");
+  section->Get("JitOff", &bJITOff, false);
+  section->Get("JitLoadStoreOff", &bJITLoadStoreOff, false);
+  section->Get("JitLoadStoreFloatingOff", &bJITLoadStoreFloatingOff, false);
+  section->Get("JitLoadStorePairedOff", &bJITLoadStorePairedOff, false);
+  section->Get("JitFloatingPointOff", &bJITFloatingPointOff, false);
+  section->Get("JitIntegerOff", &bJITIntegerOff, false);
+  section->Get("JitPairedOff", &bJITPairedOff, false);
+  section->Get("JitSystemRegistersOff", &bJITSystemRegistersOff, false);
+  section->Get("JitBranchOff", &bJITBranchOff, false);
+}
+
 void SConfig::ResetRunningGameMetadata()
 {
-  SetRunningGameMetadata("00000000", 0, 0, Core::TitleDatabase::TitleType::Other);
+  SetRunningGameMetadata("00000000", "", 0, 0, DiscIO::Country::Unknown);
 }
 
 void SConfig::SetRunningGameMetadata(const DiscIO::Volume& volume,
@@ -661,14 +659,15 @@ void SConfig::SetRunningGameMetadata(const DiscIO::Volume& volume,
 {
   if (partition == volume.GetGamePartition())
   {
-    SetRunningGameMetadata(volume.GetGameID(), volume.GetTitleID().value_or(0),
-                           volume.GetRevision().value_or(0), Core::TitleDatabase::TitleType::Other);
+    SetRunningGameMetadata(volume.GetGameID(), volume.GetGameTDBID(),
+                           volume.GetTitleID().value_or(0), volume.GetRevision().value_or(0),
+                           volume.GetCountry());
   }
   else
   {
-    SetRunningGameMetadata(volume.GetGameID(partition), volume.GetTitleID(partition).value_or(0),
-                           volume.GetRevision(partition).value_or(0),
-                           Core::TitleDatabase::TitleType::Other);
+    SetRunningGameMetadata(volume.GetGameID(partition), volume.GetGameTDBID(),
+                           volume.GetTitleID(partition).value_or(0),
+                           volume.GetRevision(partition).value_or(0), volume.GetCountry());
   }
 }
 
@@ -683,16 +682,21 @@ void SConfig::SetRunningGameMetadata(const IOS::ES::TMDReader& tmd)
   if (!DVDInterface::UpdateRunningGameMetadata(tmd_title_id))
   {
     // If not launching a disc game, just read everything from the TMD.
-    SetRunningGameMetadata(tmd.GetGameID(), tmd_title_id, tmd.GetTitleVersion(),
-                           Core::TitleDatabase::TitleType::Channel);
+    const DiscIO::Country country =
+        DiscIO::CountryCodeToCountry(static_cast<u8>(tmd_title_id), DiscIO::Platform::WiiWAD,
+                                     tmd.GetRegion(), tmd.GetTitleVersion());
+    SetRunningGameMetadata(tmd.GetGameID(), tmd.GetGameTDBID(), tmd_title_id, tmd.GetTitleVersion(),
+                           country);
   }
 }
 
-void SConfig::SetRunningGameMetadata(const std::string& game_id, u64 title_id, u16 revision,
-                                     Core::TitleDatabase::TitleType type)
+void SConfig::SetRunningGameMetadata(const std::string& game_id, const std::string& gametdb_id,
+                                     u64 title_id, u16 revision, DiscIO::Country country)
 {
-  const bool was_changed = m_game_id != game_id || m_title_id != title_id || m_revision != revision;
+  const bool was_changed = m_game_id != game_id || m_gametdb_id != gametdb_id ||
+                           m_title_id != title_id || m_revision != revision;
   m_game_id = game_id;
+  m_gametdb_id = gametdb_id;
   m_title_id = title_id;
   m_revision = revision;
 
@@ -720,7 +724,10 @@ void SConfig::SetRunningGameMetadata(const std::string& game_id, u64 title_id, u
   }
 
   const Core::TitleDatabase title_database;
-  m_title_description = title_database.Describe(m_game_id, type);
+  const DiscIO::Language language = !bWii && country == DiscIO::Country::Japan ?
+                                        DiscIO::Language::Japanese :
+                                        GetCurrentLanguage(bWii);
+  m_title_description = title_database.Describe(m_gametdb_id, language);
   NOTICE_LOG(CORE, "Active title: %s", m_title_description.c_str());
 
   Config::AddLayer(ConfigLoaders::GenerateGlobalGameConfigLoader(game_id, revision));
@@ -729,7 +736,11 @@ void SConfig::SetRunningGameMetadata(const std::string& game_id, u64 title_id, u
   if (Core::IsRunning())
   {
     // TODO: have a callback mechanism for title changes?
-    g_symbolDB.Clear();
+    if (!g_symbolDB.IsEmpty())
+    {
+      g_symbolDB.Clear();
+      Host_NotifyMapLoaded();
+    }
     CBoot::LoadMapFromFilename();
     HLE::Reload();
     PatchEngine::Reload();

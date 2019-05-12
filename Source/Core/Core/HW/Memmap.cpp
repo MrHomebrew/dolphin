@@ -487,4 +487,4 @@ void Write_U64_Swap(u64 value, u32 address)
   std::memcpy(GetPointer(address), &value, sizeof(u64));
 }
 
-}  // namespace
+}  // namespace Memory
