@@ -107,6 +107,7 @@ add_library(core
   HW/EXI/EXI_DeviceMic.cpp
   HW/GCKeyboard.cpp
   HW/GCKeyboardEmu.cpp
+  HW/GCMemcard/GCIFile.cpp
   HW/GCMemcard/GCMemcard.cpp
   HW/GCMemcard/GCMemcardDirectory.cpp
   HW/GCMemcard/GCMemcardRaw.cpp
@@ -347,6 +348,7 @@ if(WIN32)
     setupapi.lib
     iphlpapi.lib
   )
+  target_compile_definitions(core PRIVATE "-D_WINSOCK_DEPRECATED_NO_WARNINGS")
 elseif(APPLE)
   target_sources(core PRIVATE
     HW/EXI/BBA-TAP/TAP_Apple.cpp

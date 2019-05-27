@@ -137,7 +137,9 @@ bool Create(u32 adapter_index, bool enable_debug_layer)
   {
     PanicAlertT(
         "Failed to initialize Direct3D.\nMake sure your video card supports at least D3D 10.0");
+    dxgi_factory.Reset();
     D3DCommon::UnloadLibraries();
+    s_d3d11_library.Close();
     return false;
   }
 
@@ -231,6 +233,7 @@ const char* ComputeShaderVersionString()
 =======
 >>>>>>> 1d5dd5db914d94f3f612c13c6c5e1d5e711b49b5
 
+  dxgi_factory.Reset();
   D3DCommon::UnloadLibraries();
   s_d3d11_library.Close();
 }
